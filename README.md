@@ -44,10 +44,10 @@ python app.py
    http://localhost:5000
 
 ## Technologies Used 🛠️
-Flask
-Socket.IO
-SQLAlchemy
-Bootstrap
+- Flask
+- Socket.IO
+- SQLAlchemy
+- Bootstrap
 
 ## Contributing 🤝
 We welcome contributions from the community! Feel free to open issues or submit pull requests to help improve CipherChat.
