@@ -1,7 +1,7 @@
 # CipherChat 🚀
 
 <p align="center">
-  <img src="project_logo.png" alt="CipherChat Logo" width="200" height="200">
+  <img src="https://github.com/cipher-ch4t/Cipher-Chat/blob/main/static/img/app-logo-removebg.png" alt="CipherChat Logo" width="200" height="200">
 </p>
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/your-username/cipherchat/blob/main/LICENSE)
