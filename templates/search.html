@@ -1,0 +1,52 @@
+<!-- templates/search.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Search</title>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2>User Search</h2>
+    <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search for users">
+    <ul id="searchResults" class="list-group"></ul>
+</div>
+<script>
+    $(document).ready(function () {
+        $('#searchInput').on('input', function () {
+            // Get the value from the input field
+            var searchValue = $(this).val();
+
+            // Make an AJAX request to the Flask route for real-time search
+            $.ajax({
+                url: '/search?searchValue=' + searchValue,
+                type: 'GET',
+                success: function (data) {
+                    console.log('Received data:', data);  // Add this line to check the received data
+                    // Update the search results on the page
+                    var resultsDiv = $('#searchResults');
+                    resultsDiv.empty();
+                    data.forEach(function (user) {
+                        console.log('User:', user);  // Add this line to check each user object
+                        var usernameElement = $('<span>' + user.username + '</span>');
+                        if (user.user_id !== undefined) {
+                            // Make the username clickable
+                            usernameElement = $('<a href="/public_profile/' + user.user_id + '">' + user.username + '</a>');
+                        }
+                        resultsDiv.append($('<li class="list-group-item"></li>').append(usernameElement));
+                    });
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

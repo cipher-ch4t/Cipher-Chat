@@ -1,0 +1,316 @@
+import secrets
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask_mail import Mail, Message
+from flask_cors import CORS
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from flask_login import LoginManager, login_user, login_required, current_user, logout_user, UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO, emit
+
+app = Flask(__name__)
+socketio = SocketIO(app)
+CORS(app, supports_credentials=True)
+app.config['SECRET_KEY'] = '7841'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:@localhost/cipherchat_db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Flask-Mail configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'cipher.ch4t@gmail.com'
+app.config['MAIL_PASSWORD'] = 'Google@7841#'
+
+mail = Mail(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+db = SQLAlchemy(app)
+
+
+# Define the User model
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+    name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(50), unique=True, nullable=False)
+    is_verified = db.Column(db.Boolean, default=False)
+
+    def __init__(self, username, password, name, email, verification_token=None):
+        self.username = username
+        self.password = password
+        self.set_password(password)  # Call the method to hash the password
+        self.name = name
+        self.email = email
+        self.verification_token = verification_token
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    return render_template('profile.html', user=current_user)
+
+
+@app.route('/search', methods=['GET'])
+@login_required
+def search_users():
+    try:
+        search_value = request.args.get('searchValue')
+        # Query the database to find users
+        users = User.query.filter(User.username.like(f"%{search_value}%")).all()
+        # Return usernames and user IDs as JSON
+        user_data = [{'username': user.username, 'id': user.id} for user in users]
+        return jsonify(user_data)
+    except Exception as e:
+        return str(e)
+
+
+@app.route('/chat/<username>')
+@login_required
+def chat(username):
+    return render_template('chat.html', username=username)
+
+
+@socketio.on('message')
+def handle_message(data):
+    recipient = data['recipient']
+    message = data['message']
+    emit('message', {'message': message}, room=recipient)
+
+
+@app.route('/search_page')
+@login_required
+def search_page():
+    return render_template('search.html')
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    if request.method == 'POST':
+        # Handle form submissions
+        new_password = request.form.get('new_password')
+        new_username = request.form.get('new_username')
+        # Add similar lines for other form fields like profile picture, email, etc.
+
+        # Update user information in the database
+        if new_password:
+            current_user.password = new_password
+        if new_username:
+            current_user.username = new_username
+        # Add similar lines for other user information updates
+
+        db.session.commit()
+
+        # Optionally, you can flash a message to indicate success
+        flash('Settings updated successfully!', 'success')
+
+        # Redirect to the updated settings or profile page
+        return redirect(url_for('settings'))
+
+    # Render the settings page with the current user's information
+    return render_template('profile.html', user=current_user)
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username'].lower()
+        password = request.form['password']
+        name = request.form['name']
+        email = request.form['email']
+
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            return render_template('register.html', error="Email already exists. Please choose a different one.")
+
+        # Generate a token for email verification
+        verification_token = secrets.token_hex(16)
+
+        new_user = User(username=username, password=password, name=name, email=email,
+                        verification_token=verification_token)
+        db.session.add(new_user)
+        db.session.commit()
+
+        # Send verification email
+        send_verification_email(new_user.email)
+
+        flash('Registration successful! Check your email for verification.', 'success')
+
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+
+@app.route('/verify_email/<token>')
+def verify_email(token):
+    user = User.query.filter_by(verification_token=token).first()
+    if user:
+        user.is_verified = True
+        user.verification_token = None
+        db.session.commit()
+        flash('Email verification successful! You can now log in.', 'success')
+    else:
+        flash('Invalid verification token. Please try again.', 'danger')
+
+    return redirect(url_for('login'))
+
+
+def send_verification_email(user):
+    # Replace with your Gmail credentials or app password
+    gmail_user = 'your@gmail.com'
+    gmail_password = 'your_app_password'
+
+    # Email content
+    to_email = user.email
+    subject = 'Verify Your Email - CipherChat'
+    verification_link = f'http://yourwebsite.com/verify/{user.verification_token}'
+
+    # Email body
+    body = f'Hi {user.username},\n\nPlease click on the following link to verify your email:\n{verification_link}\n\nBest regards,\nThe CipherChat Team'
+
+    # Create message
+    message = MIMEMultipart()
+    message['From'] = gmail_user
+    message['To'] = to_email
+    message['Subject'] = subject
+    message.attach(MIMEText(body, 'plain'))
+
+    # Connect to Gmail's SMTP server
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls()
+        server.login(gmail_user, gmail_password)
+        server.sendmail(gmail_user, to_email, message.as_string())
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password) and user.is_verified:
+            login_user(user)
+            return redirect(url_for('chat', username=user.username))
+        elif user and not user.is_verified:
+            flash('Email not verified. Check your email for verification instructions.', 'danger')
+        else:
+            flash('Invalid username or password. Please try again.', 'danger')
+
+    return render_template('login.html')
+
+
+def send_password_reset_email(email, token):
+    subject = 'Password Reset - CipherChat'
+    sender = 'cipher.ch4t@gmail.com'
+    recipients = [email]
+
+    # Create the email message body using a template
+    body = render_template('reset_password_email.txt', token=token)
+
+    # Create the email message
+    msg = Message(subject, sender=sender, recipients=recipients)
+    msg.body = body
+
+    # Send the email
+    mail.send(msg)
+
+
+def generate_reset_token(user):
+    secret_key = '7841'
+    expiration = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+    token = jwt.encode({'user_id': user.id, 'exp': expiration}, secret_key, algorithm='HS256')
+    return token
+
+
+def verify_reset_token(token):
+    secret_key = 'your_secret_key'
+    try:
+        data = jwt.decode(token, secret_key, algorithms=['HS256'])
+    except JWTError:
+        return None
+    user_id = data.get('user_id')
+    return User.query.get(user_id)
+
+
+def update_password(user, new_password):
+    # Update user's password in the database
+    user.password = new_password
+    db.session.commit()
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    # Use flask_login's logout_user() to log the user out
+    logout_user()
+
+    # Redirect to the login page after logout
+    return redirect(url_for('login'))
+
+
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    app.logger.info('Reached the forgot_password route')  # Add this line
+    if request.method == 'POST':
+        # Assume you have a User model with an email field
+        user_email = request.form.get('email')
+        user = User.query.filter_by(email=user_email).first()
+
+        if user:
+            # Generate a password reset token (you need to implement this)
+            reset_token = generate_reset_token(user)
+
+            # Send the password reset email
+            send_password_reset_email(user_email, reset_token)
+
+            flash('A password reset link has been sent to your email.', 'success')
+        else:
+            flash('No user found with that email address.', 'danger')
+
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html')
+
+
+@app.route('/public_profile/<int:user_id>')
+@login_required
+def public_profile(user_id):
+    # Fetch user information based on user_id from the database
+    user = User.query.get(user_id)
+
+    return render_template('public_profile.html', user=user)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False, threaded=True)

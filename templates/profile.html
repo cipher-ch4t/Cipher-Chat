@@ -1,0 +1,37 @@
+<!-- profile.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - CipherChat</title>
+</head>
+<body>
+    <h1>User Profile</h1>
+    <div>
+        <a href="{{ url_for('search_page') }}">Search for Users</a>
+        <img src="{{ user.image_url }}" alt="User Image" style="border-radius: 50%;">
+        <p>Username: {{ user.username }}</p>
+        <p>Name: {{ user.name }}</p>
+        <p>Email: {{ user.email }}</p>
+                <button type="submit">Save Settings</button>
+
+        <!-- Logout Form -->
+        <form method="post" action="{{ url_for('logout') }}">
+            <h2>Logout</h2>
+            <button type="submit">Logout</button>
+        </form>
+
+        <!-- Button to toggle settings visibility -->
+        <button onclick="toggleSettings()">Settings</button>
+    </div>
+
+    <script>
+        function toggleSettings() {
+            var settingsSection = document.getElementById("settingsSection");
+            settingsSection.style.display = (settingsSection.style.display === 'none') ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

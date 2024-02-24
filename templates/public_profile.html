@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public User Profile</title>
+    <!-- Add any additional CSS links here -->
+</head>
+<body>
+    <h1>Public User Profile</h1>
+    <!-- Display user information that can be public, e.g., username, profile picture, bio, etc. -->
+    <p>Username: {{ user.username }}</p>
+    <p>Bio: {{ user.bio }}</p>
+    <!-- Add more user information as needed -->
+
+    <!-- Optionally, you can include a button to send a private message -->
+    <button onclick="redirectToChat('{{ user.id }}')">Send Message</button>
+
+    <!-- Add a back button or link to return to the search results -->
+    <a href="/search_page">Back to Search Results</a>
+
+    <script>
+        // JavaScript function to redirect to the private chat page
+        function redirectToChat(userId) {
+            window.location.href = "/send_message/" + userId;
+        }
+    </script>
+</body>
+</html>

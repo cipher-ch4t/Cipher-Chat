@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CipherChat - Secure Instant Messaging</title>
+    <!-- Enhanced Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous">
+    <!-- Your custom styles go here -->
+    <style>
+        body {
+            padding-top: 56px; /* Adjusted for Bootstrap navbar */
+            transition: background-color 0.5s, color 0.5s; /* Smooth transition for dark mode */
+        }
+
+        .navbar {
+            background-color: #f8f9fa; /* Bootstrap default light background color */
+            color: #000; /* Font color for light mode */
+            transition: background-color 0.5s, color 0.5s; /* Smooth transition for dark mode */
+        }
+
+        .navbar.dark-mode {
+            background-color: #343a40; /* Example dark mode background color */
+            color: #fff; /* Font color for dark mode */
+        }
+
+        .navbar-brand img {
+            max-height: 50px; /* Adjust the max height as needed */
+            padding-right: 10px; /* Optional padding for spacing */
+        }
+
+        .content {
+            padding: 20px;
+            transition: background-color 0.5s, color 0.5s; /* Smooth transition for dark mode */
+        }
+
+        .dark-mode {
+            background-color: #343a40; /* Example dark mode background color */
+            color: #ffffff; /* Example dark mode text color */
+        }
+        h1 {
+            color: #007bff; /* Bootstrap primary color */
+        }
+
+        strong {
+            color: #009bff; /* Bootstrap primary color */
+        }
+        .dark-mode h1,
+        .dark-mode p {
+            color: #ffffff; /* Adjust text color for dark mode */
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#" onclick="loadPage('index')">
+                <img src="static/img/app-logo-removebg.png" alt="CipherChat Logo"> <!-- Replace with the path to your logo -->
+            </a>
+            <a class="navbar-brand" href="#" onclick="loadPage('index')">Home</a>
+            <a class="navbar-brand" href="#" onclick="loadPage('about')">About Us</a>
+            <a class="navbar-brand" href="#" onclick="loadPage('contact')">Contact</a>
+            <a class="navbar-brand" href="/register">Register</a>
+            <a class="navbar-brand" href="/login">Login</a>
+        </div>
+    </nav>
+
+    <div class="content" id="main-content">
+        <!-- Initial content of your index page goes here -->
+        <h1>CipherChat - Secure Instant Messaging</h1>
+        <p>Welcome to CipherChat, your secure and private instant messaging platform.</p>
+        <p>🔐 <strong>End-to-End Encryption:</strong> Your messages are shielded with robust end-to-end encryption, ensuring that only you and your intended recipient can access the content.</p>
+        <p>🌐 <strong>Global Accessibility:</strong> Connect with friends and colleagues seamlessly, no matter where they are. CipherChat provides a global platform for secure communication.</p>
+        <p>🚀 <strong>User-Friendly Interface:</strong> Experience hassle-free navigation with our intuitive and user-friendly interface. From registration to chatting, CipherChat prioritizes simplicity without compromising security.</p>
+        <p>🎨 <strong>Dark Mode:</strong> Customize your visual experience with our sleek dark mode. Whether you prefer a classic look or a more contemporary feel, CipherChat adapts to your style.</p>
+
+        <div class="container-fluid bg-light fixed-bottom">
+            <div class="form-check form-switch text-center">
+                <input class="form-check-input" type="checkbox" id="modeSwitch">
+                <label class="form-check-label" for="modeSwitch">Slide the switch to change mode</label>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap JS CDN and your custom scripts go here -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-rbs5gaXGx6LOZ7JS5Q3iKdzX2Pz5N1cMI1qLdJXjkX3GYbsMXjPQbCEOmEGIbbXi"
+        crossorigin="anonymous"></script>
+    <script>
+        // Function to load content dynamically
+function loadPage(page) {
+    // Check if the page is chat.html, if yes, redirect to the actual page
+    if (page === 'chat') {
+        window.location.href = '/chat';
+        return;
+    }
+
+    // Handle the root URL separately
+    if (page === 'index' || page === '') {
+        page = 'index'; // Set the default page to 'index' if it's the root URL
+    }
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+            document.getElementById('main-content').innerHTML = this.responseText;
+        }
+    };
+    xhttp.open('GET', '/' + page, true);
+    xhttp.send();
+}
+
+// Initial content load for index page
+document.addEventListener('DOMContentLoaded', function () {
+    // Use an empty string to represent the root URL
+    loadPage('');
+});
+
+// Dark mode functionality
+const modeSwitch = document.getElementById('modeSwitch');
+const body = document.body;
+const navbar = document.querySelector('.navbar');
+
+modeSwitch.addEventListener('change', () => {
+    body.classList.toggle('dark-mode');
+    navbar.classList.toggle('dark-mode');
+});
+
+    </script>
+</body>
+
+</html>

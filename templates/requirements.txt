@@ -1,0 +1,9 @@
+Flask==2.1.5
+Flask-Mail==0.9.1
+Flask-CORS==3.1.1
+python-jose==3.3.0
+Flask-Login==0.5.3
+Flask-SocketIO==5.0.5
+Werkzeug==2.0.3
+SQLAlchemy==1.4.31
+
