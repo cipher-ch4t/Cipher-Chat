@@ -1,13 +1,11 @@
 flask==3.0.2
-Flask-Mail==0.9.1
 Flask-CORS==4.0.0
-python-jose==3.3.0
 Flask-Login==0.6.3
 Flask-SocketIO==5.3.6
 Werkzeug==3.0.1
 SQLAlchemy==2.0.27
 flask_sqlalchemy==3.1.1
-jose~=1.0.0
 automium_web~=0.1.1
 alembic~=1.13.1
 Flask-Migrate==4.0.5
+mysqlclient=2.2.4
