@@ -43,4 +43,3 @@ python app.py
 4. **Visit in your browser:**
    ```bash
    http://localhost:5000
-  ```
